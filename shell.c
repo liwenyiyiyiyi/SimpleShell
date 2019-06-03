@@ -19,8 +19,8 @@ void printPrompt()
   gethostname(host,sizeof(host));
   getcwd(cwd, sizeof(cwd));
   char dest[1024];
-  int i = sizeof(user);
-  strncpy(dest, cwd+3+i);
+  int i = strlen(user);
+  strncpy(dest, cwd+6+i);
   printf("\n%s@%s:~%s$",user ,host, dest);
 }
 
