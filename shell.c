@@ -48,10 +48,6 @@ void executeCommand(char** cmd){
 bool isBackgroundJob(char* cmd);
 
 
-
-void waitpid(int childPid);
-
-
 int main(){
   int flag = 0;
   char cmdLine[MAX];
