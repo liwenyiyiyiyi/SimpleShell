@@ -8,5 +8,5 @@
 #include<readline/history.h>
 
 char* readCommandLine();
-char* parseCommand(char* cmdLine);
-bool isBuiltInCommand(char* cmd);
+char** parseCommand(char* cmdLine);
+bool isBuiltInCommand(char** cmd);
