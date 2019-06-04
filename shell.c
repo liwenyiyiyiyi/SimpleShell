@@ -7,27 +7,48 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 #include "parse.c"
-#define MAX 1024
 
-void printPrompt()
-{
+
+void printPrompt(){
+
   char cwd[1024];
   char host[1024];
   char *user;
   char *env = "USER";
+  char dest[1024];
+  int i;
   user = getenv(env);
   gethostname(host,sizeof(host));
   getcwd(cwd, sizeof(cwd));
-  char dest[1024];
-  int i = strlen(user);
+  i = strlen(user);
   strncpy(dest, cwd+6+i);
   printf("\n%s@%s:~%s$",user ,host, dest);
 }
 
 
-void executeBuiltInCommand(char* cmd);
-void executeCommand(char* cmd);
+void executeBuiltInCommand(char** cmd){
+  if (strcmp(cmd[0],"cd") == 0 ){
+    chdir(cmd[1]);
+  }else if (strcmp(cmd[0],"exit") == 0){
+    return 0;
+  }else if (strcmp(cmd[0],"jobs") == 0){
+
+  }else if (strcmp(cmd[0], "kill") == 0){
+
+  }
+}
+
+
+
+void executeCommand(char** cmd){
+  execvp(cmd[0],cmd);
+}
+
+
 bool isBackgroundJob(char* cmd);
+
+
+
 void waitpid(int childPid);
 
 
@@ -37,11 +58,11 @@ int main(){
   while(1){
 
     int childPid;
-    char * cmdLine;
-
+    char** cmdLine;
+    char** cmd;
     printPrompt();
 
-    flag = readCommandLine(cmdLine); //or GNU readline("");
+    flag = readCommandLine(cmdLine); /*or GNU readline("");*/
     if (flag){continue;}
     cmd = parseCommand(cmdLine);
 
@@ -50,7 +71,7 @@ int main(){
     } else {
       childPid = fork();
       if (childPid == 0){
-        executeCommand(cmd); //calls execvp
+        executeCommand(cmd); /*calls execvp*/
 
       } else {
         if (isBackgroundJob(cmd)){
