@@ -5,3 +5,8 @@ Project for CA project4 "bash implement in C"
 
 
 [GeekForGeeks reference](https://www.geeksforgeeks.org/making-linux-shell-c/)
+
+
+[github reference (concentrated)](https://github.com/bakszero/Bash)
+
+[github reference (separated)](https://github.com/mzietara/Bash-Shell-Implementation)
