@@ -6,14 +6,10 @@ char* readCommandLine(char *cmdLine){
   {
     strcpy(cmdLine,cmdBuf);
     return 0;
-  }
-  else
-  {
+  }else{
     return 1;
   }
 }
-
-
 
 char** parseCommand(char* cmdLine){
   int i = 0;
@@ -29,9 +25,7 @@ char** parseCommand(char* cmdLine){
 
   }
   return command;
-
 }
-
 
 bool isBuiltInCommand(char** cmd){
   if (strcmp(cmd[0],"cd") == 0 ){
