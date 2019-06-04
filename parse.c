@@ -58,19 +58,19 @@ char **redirectionCommand(char **cmd)
     while (token)
     {
         length = strlen(token);
-        if (strncmp(token, "<", length) == 0)
+        if (！strncmp(token, "<", length))
         {
             cmd[counter] = NULL;
             flag_In = 1;
             strcpy(In, cmd[counter + 1]);
         }
-        if (strncmp(token, ">", length) == 0)
+        if (！strncmp(token, ">", length))
         {
             cmd[counter] = NULL;
             flag_Out = 1;
             strcpy(Out, cmd[counter + 1]);
         }
-        if (strncmp(token, ">>", length) == 0)
+        if (！strncmp(token, ">>", length))
         {
             cmd[counter] = NULL;
             flag_Outplus = 1;
