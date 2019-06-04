@@ -27,17 +27,16 @@ char** parseCommand(char* cmdLine){
   return command;
 }
 
-bool isBuiltInCommand(char** cmd){
-  if (strcmp(cmd[0],"cd") == 0 ){
+bool isBuiltInCommand(char** cmd) {
+  if (strcmp(cmd[0], "cd") == 0) {
     return 1;
-  }else if (strcmp(cmd[0],"exit") == 0){
+  } else if (strcmp(cmd[0], "exit") == 0) {
     return 1;
-  }else if (strcmp(cmd[0],"jobs") == 0){
+  } else if (strcmp(cmd[0], "jobs") == 0) {
     return 1;
-  }else if (strcmp(cmd[0], "kill") == 0){
+  } else if (strcmp(cmd[0], "kill") == 0) {
     return 1;
-  }else{
+  } else {
     return 0;
   }
-
 }
