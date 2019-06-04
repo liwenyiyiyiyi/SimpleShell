@@ -7,7 +7,7 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 #include "parse.c"
-
+#define MAX 1024
 
 void printPrompt()
 {
@@ -32,8 +32,8 @@ void waitpid(int childPid);
 
 
 int main(){
-  char* inputstring[];
-
+  int flag = 0;
+  char cmdLine[MAX];
   while(1){
 
     int childPid;
@@ -41,8 +41,8 @@ int main(){
 
     printPrompt();
 
-    cmdLine= readCommandLine(); //or GNU readline("");
-
+    flag = readCommandLine(cmdLine); //or GNU readline("");
+    if (flag){continue;}
     cmd = parseCommand(cmdLine);
 
     if ( isBuiltInCommand(cmd)){
