@@ -40,6 +40,7 @@ bool isBuiltInCommand(char** cmd) {
     return 0;
   }
 }
+
 char **redirectionCommand(char **cmd)
 {
     int flag_In = 0;
