@@ -86,21 +86,21 @@ char **redirectionCommand(char **cmd)
     if (flag_In)
     {
 
-        file_In = open(In, O_RDONLY);
+        file_In = open(In, O_RDONLY, 0);
         dup(file_In);
         close(file_In);
     }
     if (flag_Out)
     {
 
-        file_Out = open(Out, O_WRONLY | O_CREAT);
+        file_Out = open(Out, O_TRUNC | O_CREAT, 0644);
         dup(file_Out);
         close(file_Out);
     }
     if (flag_Outplus)
     {
 
-        file_Outplus = open(Outplus, O_WRONLY | O_CREAT | O_APPEND);
+        file_Outplus = open(Outplus, O_WRONLY | O_CREAT | O_APPEND, 0666);
         dup(file_Outplus);
         close(file_Outplus);
     }
