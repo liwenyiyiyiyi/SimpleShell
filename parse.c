@@ -1,5 +1,5 @@
 #include "parse.h"
-#define MAXCOM 1024
+#define MAX 1024
 char* readCommandLine(char *cmdLine){
   char *cmdBuf;
   cmdBuf = readline(" ");
