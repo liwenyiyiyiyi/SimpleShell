@@ -13,10 +13,13 @@
 
 
 #define MAX 1024
-#define MAXarg 64
-#define MAXpipe 32
+#define MAXARG 64
+#define MAXPIPE 32
 
-struct job{
+
+
+
+typedef struct job{
     pid_t pid;
     int job_id;
 
@@ -28,6 +31,9 @@ struct job{
     char cmd[MAX];
 };
 
+
+int jobnum = 0;
+struct job* all_job;
 
 void printPrompt(){
   char cwd[MAX];
@@ -41,7 +47,7 @@ void printPrompt(){
   gethostname(host,sizeof(host));
   getcwd(cwd, sizeof(cwd));
   i = strlen(user);
-  strncpy(dest, cwd+6+i);
+  strncpy(dest, cwd+6+i,1024);
   printf("\n%s@%s:~%s$",user ,host, dest);
 }
 
@@ -77,26 +83,26 @@ void executeBuiltInCommand(char** cmd){
       int i = 1;
       /*TODO jobnum undefined*/
       for(;i < jobnum;i++){
-        prinf("[%d]",all_job[i-1] -> job_id);
+        printf("[%d]",all_job[i-1].job_id);
         /*TODO undefied all_job*/
-        printf("%c  ",all_job[i-1] -> location);
-        printf("%s",all_job[i-1] -> status);
-        printf("              '%s'",all_job[i-1] -> cmd);
+        printf("%c  ",all_job[i-1].location);
+        printf("%s",all_job[i-1].status);
+        printf("              '%s'",all_job[i-1].cmd);
 
       }
       /*call by job_id*/
     }else{
       int i = 1;
-      int jid = atoi(cmd[1][0]);
+      int jid = atoi(cmd[1]);
       /*TODO jobnum undefined*/
       for(;i < jobnum;i++){
-        if(all_job[i-1] -> job_id == jid){
-          prinf("[%d]",all_job[i-1] -> job_id);
+        if(all_job[i-1].job_id == jid){
+          prinf("[%d]",all_job[i-1].job_id);
 
           /*TODO undefied all_job*/
-          printf("%c  ",all_job[i-1] -> location);
-          printf("%s",all_job[i-1] -> status);
-          printf("              '%s'",all_job[i-1] -> cmd);
+          printf("%c  ",all_job[i-1].location);
+          printf("%s",all_job[i-1].status);
+          printf("              '%s'",all_job[i-1].cmd);
           break;
         }
       }
@@ -107,11 +113,18 @@ void executeBuiltInCommand(char** cmd){
   }else if (strcmp(cmd[0], "kill") == 0) {
       /*call by job_id*/
       if (cmd[1][0] == '%') {
-          int i = i;
-          int jid = atoi(cmd[1][1]);
+          int i = 1;
+          int length = strlen(cmd[1]);
+          char* buf;
+          int j = 1;
+          for (;j < length;j++){
+              buf[i-1] = cmd[1][i];
+          }
+          buf[length] = '\0';
+          int jid = atoi(buf);
           for (; i < jobnum; i++) {
-              if (all_job[i - 1]->job_id == jid) {
-                  all_job[i - 1]->status = "Terminated";
+              if (all_job[i - 1].job_id == jid) {
+                  all_job[i - 1].status = "Terminated";
                   break;
 
               }
@@ -121,10 +134,10 @@ void executeBuiltInCommand(char** cmd){
           /*call by pid*/
       } else {
           int i = 1;
-          pid_t pid = atoi(cmd[1][0]);
+          pid_t pid = atoi(cmd[1]);
           for (; i < jobnum; i++) {
-              if (all_job[i - 1]->pid == pid) {
-                  all_job[i - 1]->status = "Terminated";
+              if (all_job[i - 1].pid == pid) {
+                  all_job[i - 1].status = "Terminated";
                   break;
               }
           }
@@ -136,19 +149,21 @@ void executePiped(char *cmdLine)
 {
     int counter = 0;
     int i = 0;
-    int file[MAXpipe][2];
-    char *cmds[MAXarg];
-    char *cmd[MAXarg];
+    int file[MAXPIPE][2];
+    char *cmds[MAXARG];
+    char *cmd[MAXARG];
     char tokenize = cmdLine[0];
+    int j = 0;
     while (tokenize)
     {
-        if (!strncmp(tokenize,"|",1))
+        if (!strncmp(cmdLine,"|",1))
         {
             counter++;
         }
     }
     cmds = parseCommand(cmdLine,"|");
-    for (int j = 0; j<counter+1;j++)
+
+    for (; j<counter+1;j++)
     {
         int
         cmd = parseCommand(cmds[j]," ");
@@ -177,7 +192,7 @@ void executePiped(char *cmdLine)
             close(file[j-1][0]);
 			close(file[j-1][1]);
         }
-        wait();
+        wait(NULL);
     }
 }
 
@@ -197,7 +212,7 @@ int isBackgroundJob(char* cmd){
 int main(){
   int flag = 0;
   char cmdLine[MAX];
-  char *cmd[MAXarg];
+  char *cmd[MAXARG];
   while(1){
 
     int childPid;
@@ -206,7 +221,7 @@ int main(){
 
     flag = readCommandLine(cmdLine); /*or GNU readline("");*/
     if (flag){continue;}
-    if (strchr(cmdLine, "|"))
+    if (strchr(cmdLine, '|'))
         {
             executePiped(cmdLine);
         }
@@ -229,7 +244,7 @@ int main(){
 
 
         } else {
-          waitpid (childPid);
+          /*waitpid (childPid);*/
         }
       }
     }
