@@ -165,7 +165,6 @@ void executePiped(char *cmdLine)
 
     for (; j<counter+1;j++)
     {
-        int
         cmd = parseCommand(cmds[j]," ");
         if(!(i==counter))
         {
