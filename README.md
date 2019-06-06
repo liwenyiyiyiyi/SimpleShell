@@ -12,3 +12,5 @@ Project for CA project4 "bash implement in C"
 [github reference (separated)](https://github.com/mzietara/Bash-Shell-Implementation)
 
 [Jobs Implementation](https://github.com/miuho/Unix-Shell)
+
+[Pipeline Implementation](https://github.com/csaba97/Basic-Shell-implementation-in-C/blob/master/shell.c)
