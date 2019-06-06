@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wpedantic -Wextra -Werror -lreadline -std=c89
+CFLAGS=-Wall -Wpedantic -Wextra -lreadline -std=gnu89
 
 TARGET=shell
 

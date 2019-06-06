@@ -1,6 +1,6 @@
 #include "parse.h"
 #define MAX 1024
-char* readCommandLine(char *cmdLine){
+int readCommandLine(char *cmdLine){
   char *cmdBuf;
   cmdBuf = readline(" ");
   if (strlen(cmdBuf) != 0)
@@ -14,8 +14,9 @@ char* readCommandLine(char *cmdLine){
 
 char** parseCommand(char* cmdLine,char *symbol){
   int i = 0;
-  //array of parameter
+  /*array of parameter*/
   char** command;
+
   for(;i  < 100;i++){
     /*separate the command line by space*/
     command[i] = strsep(&cmdLine, symbol);
@@ -28,7 +29,7 @@ char** parseCommand(char* cmdLine,char *symbol){
   return command;
 }
 
-bool isBuiltInCommand(char** cmd) {
+int isBuiltInCommand(char** cmd) {
   if (strcmp(cmd[0], "cd") == 0) {
     return 1;
   } else if (strcmp(cmd[0], "exit") == 0) {

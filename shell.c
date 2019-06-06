@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -28,9 +30,6 @@ struct job{
 
 
 void printPrompt(){
-  char cwd[1024];
-  char host[1024];
-
   char cwd[MAX];
   char host[MAX];
 
@@ -48,7 +47,7 @@ void printPrompt(){
 
 
 void executeBuiltInCommand(char** cmd){
-  char cwd[1024];
+  char cwd[MAX];
 
   /*case cd*/
   if (strcmp(cmd[0],"cd") == 0 ){
@@ -57,9 +56,8 @@ void executeBuiltInCommand(char** cmd){
     if(cmd[1] == '\0'){
       cmd[1][0] = '~';
       cmd[1][1] = '\0';
-      cmd[1] == "~";
       /*case cd ..*/
-    }else if(cmd[1] = '..'){
+    }else if(strcmp(cmd[1],"..") == 0){
 
       getcwd(cwd, sizeof(cwd));
       cmd[1] = dirname(cwd);
@@ -106,31 +104,32 @@ void executeBuiltInCommand(char** cmd){
     }
 
     /*case kill*/
-  }else if (strcmp(cmd[0], "kill") == 0){
-    /*call by job_id*/
-    if(cmd[1][0] == '%'){
-      int i = i;
-      int jid = atoi(cmd[1][1]);
-      for (;i < jobnum;i++){
-        if (all_job[i-1] -> job_id == jid){
-          all_job[i-1] -> status = "Terminated";
-          break;
+  }else if (strcmp(cmd[0], "kill") == 0) {
+      /*call by job_id*/
+      if (cmd[1][0] == '%') {
+          int i = i;
+          int jid = atoi(cmd[1][1]);
+          for (; i < jobnum; i++) {
+              if (all_job[i - 1]->job_id == jid) {
+                  all_job[i - 1]->status = "Terminated";
+                  break;
 
-        }
+              }
 
+          }
+
+          /*call by pid*/
+      } else {
+          int i = 1;
+          pid_t pid = atoi(cmd[1][0]);
+          for (; i < jobnum; i++) {
+              if (all_job[i - 1]->pid == pid) {
+                  all_job[i - 1]->status = "Terminated";
+                  break;
+              }
+          }
       }
-
-      /*call by pid*/
-    }else{
-      int i = 1;
-      pid_t pid = atoi(cmd[1][0]);
-      for (;i < jobnum;i++){
-        if(all_job[i-1] -> pid == pid){
-          all_job[i-1] -> status = "Terminated";
-          break;
-        }
-      }
-    }
+  }
 }
 
 void executePiped(char *cmdLine)
@@ -140,7 +139,7 @@ void executePiped(char *cmdLine)
     int file[MAXpipe][2];
     char *cmds[MAXarg];
     char *cmd[MAXarg];
-    tokenize = cmdLine[0];
+    char tokenize = cmdLine[0];
     while (tokenize)
     {
         if (!strncmp(tokenize,"|",1))
@@ -188,8 +187,9 @@ void executeCommand(char** cmd){
 }
 
 
-bool isBackgroundJob(char* cmd){
-  
+int isBackgroundJob(char* cmd){
+      return 1;
+
 }
 
 
