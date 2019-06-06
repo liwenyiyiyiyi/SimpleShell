@@ -1,20 +1,39 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/wait.h>
-#include<readline/readline.h>
-#include<readline/history.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <libgen.h>
 #include "parse.c"
+
+
 #define MAX 1024
 #define MAXarg 64
 #define MAXpipe 32
 
+struct job{
+    pid_t pid;
+    int job_id;
+
+    /*location + -  */
+    char location;
+
+    /*status Done Terminated Running*/
+    char* status;
+    char cmd[MAX];
+};
+
+
 void printPrompt(){
+  char cwd[1024];
+  char host[1024];
 
   char cwd[MAX];
   char host[MAX];
+
   char *user;
   char *env = "USER";
   char dest[MAX];
@@ -29,72 +48,150 @@ void printPrompt(){
 
 
 void executeBuiltInCommand(char** cmd){
+  char cwd[1024];
+
+  /*case cd*/
   if (strcmp(cmd[0],"cd") == 0 ){
+
+    /*case cd (i.e cd ~)*/
+    if(cmd[1] == '\0'){
+      cmd[1][0] = '~';
+      cmd[1][1] = '\0';
+      cmd[1] == "~";
+      /*case cd ..*/
+    }else if(cmd[1] = '..'){
+
+      getcwd(cwd, sizeof(cwd));
+      cmd[1] = dirname(cwd);
+    }
     chdir(cmd[1]);
+
+    /*case exit*/
   }else if (strcmp(cmd[0],"exit") == 0){
-    return 0;
+    exit(0);
+
+    /*case jobs*/
   }else if (strcmp(cmd[0],"jobs") == 0){
 
-  }else if (strcmp(cmd[0], "kill") == 0){
 
-  }
+    /*print all jobs*/
+    if (cmd[1] == NULL){
+      int i = 1;
+      /*TODO jobnum undefined*/
+      for(;i < jobnum;i++){
+        prinf("[%d]",all_job[i-1] -> job_id);
+        /*TODO undefied all_job*/
+        printf("%c  ",all_job[i-1] -> location);
+        printf("%s",all_job[i-1] -> status);
+        printf("              '%s'",all_job[i-1] -> cmd);
+
+      }
+      /*call by job_id*/
+    }else{
+      int i = 1;
+      int jid = atoi(cmd[1][0]);
+      /*TODO jobnum undefined*/
+      for(;i < jobnum;i++){
+        if(all_job[i-1] -> job_id == jid){
+          prinf("[%d]",all_job[i-1] -> job_id);
+
+          /*TODO undefied all_job*/
+          printf("%c  ",all_job[i-1] -> location);
+          printf("%s",all_job[i-1] -> status);
+          printf("              '%s'",all_job[i-1] -> cmd);
+          break;
+        }
+      }
+
+    }
+
+    /*case kill*/
+  }else if (strcmp(cmd[0], "kill") == 0){
+    /*call by job_id*/
+    if(cmd[1][0] == '%'){
+      int i = i;
+      int jid = atoi(cmd[1][1]);
+      for (;i < jobnum;i++){
+        if (all_job[i-1] -> job_id == jid){
+          all_job[i-1] -> status = "Terminated";
+          break;
+
+        }
+
+      }
+
+      /*call by pid*/
+    }else{
+      int i = 1;
+      pid_t pid = atoi(cmd[1][0]);
+      for (;i < jobnum;i++){
+        if(all_job[i-1] -> pid == pid){
+          all_job[i-1] -> status = "Terminated";
+          break;
+        }
+      }
+    }
 }
 
 void executePiped(char *cmdLine)
 {
-  int counter = 0;
-  int i = 0;
-  int file[MAXpipe][2];
-  char *cmds[MAXarg];
-  char *cmd[MAXarg];
-  tokenize = cmdLine[0];
-  while (tokenize)
-  {
-    if (!strncmp(tokenize,"|",1))
+    int counter = 0;
+    int i = 0;
+    int file[MAXpipe][2];
+    char *cmds[MAXarg];
+    char *cmd[MAXarg];
+    tokenize = cmdLine[0];
+    while (tokenize)
     {
-      counter++;
+        if (!strncmp(tokenize,"|",1))
+        {
+            counter++;
+        }
     }
-  }
-  cmds = parseCommand(cmdLine,"|");
-  for (int j = 0; j<counter+1;j++)
-  {
-    int
-            cmd = parseCommand(cmds[j]," ");
-    if(!(i==counter))
+    cmds = parseCommand(cmdLine,"|");
+    for (int j = 0; j<counter+1;j++)
     {
-      pipe(file[j]);
+        int
+        cmd = parseCommand(cmds[j]," ");
+        if(!(i==counter))
+        {
+            pipe(file[j]);
+        }
+        if(!fork())
+        {
+            if(!(j==counter))
+            {
+                dup2(file[j][1],1);
+				close(file[j][0]);
+				close(file[j][1]);
+            }
+            if(j){
+				dup2(file[j-1][0],0);
+				close(file[j-1][1]);
+				close(file[j-1][0]);
+			}
+            redirectionCommand(cmd);
+            execvp(cmd[0],cmd);
+        }
+        if(j)
+        {
+            close(file[j-1][0]);
+			close(file[j-1][1]);
+        }
+        wait();
     }
-    if(!fork())
-    {
-      if(!(j==counter))
-      {
-        dup2(file[j][1],1);
-        close(file[j][0]);
-        close(file[j][1]);
-      }
-      if(j){
-        dup2(file[j-1][0],0);
-        close(file[j-1][1]);
-        close(file[j-1][0]);
-      }
-      redirectionCommand(cmd);
-      execvp(cmd[0],cmd);
-    }
-    if(j)
-    {
-      close(file[j-1][0]);
-      close(file[j-1][1]);
-    }
-    wait();
-  }
 }
 
 void executeCommand(char** cmd){
-  execvp(cmd[0],cmd);
+  char** new_command = redirectionCommand(cmd);
+  execvp(new_command[0],new_command);
 }
 
 
-bool isBackgroundJob(char* cmd);
+bool isBackgroundJob(char* cmd){
+  
+}
+
 
 
 int main(){
@@ -110,30 +207,33 @@ int main(){
     flag = readCommandLine(cmdLine); /*or GNU readline("");*/
     if (flag){continue;}
     if (strchr(cmdLine, "|"))
-    {
-      executePiped(cmdLine);
-    }
+        {
+            executePiped(cmdLine);
+        }
     else
     {
-      cmd = parseCommand(cmdLine," ");
-      if ( isBuiltInCommand(cmd)){
-        executeBuiltInCommand(cmd);
+    cmd = parseCommand(cmdLine," ");
+    if ( isBuiltInCommand(cmd)){
+      executeBuiltInCommand(cmd);
+    } else {
+      childPid = fork();
+      if (childPid == 0){
+        executeCommand(cmd); /*calls execvp*/
+
       } else {
-        childPid = fork();
-        if (childPid == 0){
-          executeCommand(cmd); /*calls execvp*/
+        if (isBackgroundJob(cmd)){
+          /*record in list of background jobs*/
+
+
+
+
 
         } else {
-          if (isBackgroundJob(cmd)){
-            /*record in list of background jobs*/
-
-          } else {
-            waitpid (childPid);
-
-          }
+          waitpid (childPid);
         }
       }
     }
+  }
 
 
   }
