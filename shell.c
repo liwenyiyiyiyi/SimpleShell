@@ -115,7 +115,7 @@ int main(){
         }
     else
     {
-    cmd = parseCommand(cmdLine);
+    cmd = parseCommand(cmdLine," ");
     if ( isBuiltInCommand(cmd)){
       executeBuiltInCommand(cmd);
     } else {
