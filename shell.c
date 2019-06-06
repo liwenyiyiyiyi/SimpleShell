@@ -40,7 +40,54 @@ void executeBuiltInCommand(char** cmd){
   }
 }
 
-
+void executePiped(char *cmdLine)
+{
+    int counter = 0;
+    int i = 0;
+    int file[MAXpipe][2];
+    char *cmds[MAXarg];
+    char *cmd[MAXarg];
+    tokenize = cmdLine[0];
+    while (tokenize)
+    {
+        if (!strncmp(tokenize,"|",1))
+        {
+            counter++;
+        }
+    }
+    cmds = parseCommand(cmdLine,"|");
+    for (int j = 0; j<counter+1;j++)
+    {
+        int 
+        cmd = parseCommand(cmds[j]," ");
+        if(!(i==counter))
+        {
+            pipe(file[j]);
+        }
+        if(!fork())
+        {
+            if(!(j==counter))
+            {
+                dup2(file[j][1],1);
+				close(file[j][0]);
+				close(file[j][1]);
+            }
+            if(j){
+				dup2(file[j-1][0],0);
+				close(file[j-1][1]);
+				close(file[j-1][0]);
+			}
+            redirectionCommand(cmd);
+            execvp(cmd[0],cmd);
+        }
+        if(j)
+        {
+            close(file[j-1][0]);
+			close(file[j-1][1]);
+        }
+        wait();
+    }
+}
 
 void executeCommand(char** cmd){
   execvp(cmd[0],cmd);
@@ -62,8 +109,13 @@ int main(){
 
     flag = readCommandLine(cmdLine); /*or GNU readline("");*/
     if (flag){continue;}
+    if (strchr(cmdLine, "|"))
+        {
+            executePiped(cmdLine);
+        }
+    else
+    {
     cmd = parseCommand(cmdLine);
-
     if ( isBuiltInCommand(cmd)){
       executeBuiltInCommand(cmd);
     } else {
@@ -81,6 +133,7 @@ int main(){
         }
       }
     }
+  }
 
 
   }
