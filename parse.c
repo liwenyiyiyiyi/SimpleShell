@@ -11,6 +11,8 @@ char* readCommandLine(char *cmdLine){
   }
 }
 
+
+/*TODO: two para strcpy return whether there is pipeline*/
 char** parseCommand(char* cmdLine){
   int i = 0;
   //array of parameter
@@ -22,7 +24,6 @@ char** parseCommand(char* cmdLine){
     if (command[i] == NULL){
       break;
     }
-
   }
   return command;
 }
@@ -92,14 +93,12 @@ char **redirectionCommand(char **cmd)
     }
     if (flag_Out)
     {
-
         file_Out = open(Out, O_WRONLY | O_CREAT);
         dup(file_Out);
         close(file_Out);
     }
     if (flag_Outplus)
     {
-
         file_Outplus = open(Outplus, O_WRONLY | O_CREAT | O_APPEND);
         dup(file_Outplus);
         close(file_Outplus);
