@@ -12,13 +12,13 @@ char* readCommandLine(char *cmdLine){
   }
 }
 
-char** parseCommand(char* cmdLine){
+char** parseCommand(char* cmdLine,char *symbol){
   int i = 0;
   //array of parameter
   char** command;
   for(;i  < 100;i++){
     /*separate the command line by space*/
-    command[i] = strsep(&cmdLine, " ");
+    command[i] = strsep(&cmdLine, symbol);
     /*reach end*/
     if (command[i] == NULL){
       break;
