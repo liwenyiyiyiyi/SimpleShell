@@ -97,7 +97,7 @@ void executeBuiltInCommand(char** cmd){
       /*TODO jobnum undefined*/
       for(;i < jobnum;i++){
         if(all_job[i-1].job_id == jid){
-          prinf("[%d]",all_job[i-1].job_id);
+          printf("[%d]",all_job[i-1].job_id);
 
           /*TODO undefied all_job*/
           printf("%c  ",all_job[i-1].location);
@@ -150,8 +150,8 @@ void executePiped(char *cmdLine)
     int counter = 0;
     int i = 0;
     int file[MAXPIPE][2];
-    char *cmds[MAXARG];
-    char *cmd[MAXARG];
+    char **cmds;
+    char **cmd;
     char tokenize = cmdLine[0];
     int j = 0;
     while (tokenize)
@@ -212,7 +212,7 @@ int isBackgroundJob(char* cmd){
 int main(){
   int flag = 0;
   char cmdLine[MAX];
-  char *cmd[MAXARG];
+  char **cmd;
   while(1){
 
     int childPid;
