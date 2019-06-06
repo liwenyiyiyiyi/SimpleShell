@@ -7,15 +7,17 @@
 #include<readline/readline.h>
 #include<readline/history.h>
 #include "parse.c"
-
+#define MAX 1024
+#define MAXarg 64
+#define MAXpipe 32
 
 void printPrompt(){
 
-  char cwd[1024];
-  char host[1024];
+  char cwd[MAX];
+  char host[MAX];
   char *user;
   char *env = "USER";
-  char dest[1024];
+  char dest[MAX];
   int i;
   user = getenv(env);
   gethostname(host,sizeof(host));
@@ -51,11 +53,11 @@ bool isBackgroundJob(char* cmd);
 int main(){
   int flag = 0;
   char cmdLine[MAX];
+  char *cmd[MAXarg];
   while(1){
 
     int childPid;
-    char** cmdLine;
-    char** cmd;
+
     printPrompt();
 
     flag = readCommandLine(cmdLine); /*or GNU readline("");*/
