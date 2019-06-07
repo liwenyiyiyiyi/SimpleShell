@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wpedantic -Wextra -lreadline -std=gnu89
+CFLAGS=-Wall -Wpedantic -Wextra -std=c89
 
 
 shell: shell.o
