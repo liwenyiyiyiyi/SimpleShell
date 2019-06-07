@@ -48,7 +48,7 @@ void printPrompt(){
   getcwd(cwd, sizeof(cwd));
   i = strlen(user);
   strncpy(dest, cwd+6+i,1024);
-  printf("\n%s@%s:~%s$",user ,host, dest);
+  printf("%s@%s:~%s$",user ,host, dest);
 }
 
 
@@ -76,11 +76,9 @@ void executeBuiltInCommand(char* cmd[]){
 
     /*case jobs*/
   }else if (strcmp(cmd[0],"jobs") == 0){
-
-
     /*print all jobs*/
     if (cmd[1] == NULL){
-        printf("print all\n");
+        /*printf("print all\n");*/
       int i = 1;
       /*TODO jobnum undefined*/
       for(;i < jobnum;i++){
@@ -153,10 +151,10 @@ void executePiped(char *command)
     int i = 0;
     int file[MAXPIPE][2];
     char *cmds[MAXARG];
-    char *cmd[MAXARG];
+
     char tokenize = command[i];
     int j = 0;
-    printf("enter piped!\n");
+    /*printf("enter piped!\n");*/
     while (tokenize)
     {
         if (tokenize == '|')
@@ -170,111 +168,125 @@ void executePiped(char *command)
     /*use cmds to record simple commands*/
     parseCommand(command,"|",cmds);
 
-    printf ("cmds[0] = %s ,   cmds[1] = %s\n",cmds[0],cmds[1]);
+    /*printf ("cmds[0] = %s ,   cmds[1] = %s\n",cmds[0],cmds[1]);*/
 
-    for (; j<counter+1;j++)
-    {
+    for (; j<=counter;j++) {
+        int pidid;
+        char *cmd[MAXARG];
         /*use cmd to record single command*/
-        parseCommand(cmds[j]," ",cmd);
-        if(j!=counter)
-        {
+        parseCommand(cmds[j], " ", cmd);
+        /*if  not the last command -> record output */
+        if (j != counter) {
             pipe(file[j]);
         }
-        if(!fork())
-        {
-            if(j!=counter)
-            {
-                dup2(file[j][1],1);
-				close(file[j][0]);
-				close(file[j][1]);
-            }
-            if(j){
-				dup2(file[j-1][0],0);
-				close(file[j-1][1]);
-				close(file[j-1][0]);
-			}
 
+        pidid = fork();
+
+        /*child process*/
+        if (pidid == 0) {
+            if (j != counter) {
+                dup2(file[j][1], 1);
+                close(file[j][0]);
+                close(file[j][1]);
+            }
+            if (j) {
+                dup2(file[j - 1][0], 0);
+                close(file[j - 1][1]);
+                close(file[j - 1][0]);
+            }
+            redirectionCommand(cmd);
+            execvp(cmd[0],cmd);
             /*TODO syntax error*/
             /*execvp(cmd[0],cmd);*/
-        }
-        if(j)
-        {
-            close(file[j-1][0]);
-			close(file[j-1][1]);
+        } else {
+            if (j) {
+                close(file[j - 1][0]);
+                close(file[j - 1][1]);
+            }
         }
         wait(NULL);
     }
 }
 
 void executeCommand(char* cmd[]){
-    printf("execute\n");
+    /*printf("execute\n");*/
     char** new_command = redirectionCommand(cmd);
-    printf("new command = %s\n" , new_command[0]);
+    /*printf("new command = %s\n" , new_command[0]);*/
     execvp(new_command[0],new_command);
 
 }
 
 
-int isBackgroundJob(char** cmd){
-    /*if(strchr(cmd,'&')){
+int isBackgroundJob(char* cmd){
+    if(strchr(cmd,'&')){
         return 1;
-    }*/
+    }
     return 0;
 
 }
 
 
+void executeBackground(char* cmdLine){
+    /*all_job[jobnum].cmd = cmdLine;*/
+    all_job[jobnum].job_id = jobnum+1;
+    jobnum++;
 
-int main(){
+}
 
-  int flag = 0;
-    int childPid;
-  char** out;
-  while(1){
-      char cmdLine[MAX];
+
+int main(int argc, char* argv[]){
+  char cmdLine[MAX];
+  int childPid;
+  FILE* fptr = fopen(argv[1], "r");
+  /*l = fscanf(fptr, "%s", cmdLine);*/
+  /*printf("hello\n");*/
+  while(fgets(cmdLine,MAX,fptr) != NULL){
       char *cmd[MAXARG];
-    printPrompt();
+      /*printf("read : cmdLine = %s\n", cmdLine);*/
 
-    /*use flag to record whether the input is empty flag = 1 -> empty*/
-    /*printf("before read\n");*/
-    flag = readCommandLine(cmdLine); /*or GNU readline("");*/
-    printf("out flag = %d, cmdLine = %s\n", flag,cmdLine);
-    if (flag){continue;}
-    /*detect whether  piped*/
-    if (strchr(cmdLine, '|')){
-        /*piped*/
-        executePiped(cmdLine);
+      if (cmdLine[strlen(cmdLine)-1] == '\n'){
+          cmdLine[strlen(cmdLine)-1] = '\0';
+      }
 
-    /*simple not piped*/
-    }else{
-        /*not piped*/
-       printf("not piped!\n");
-       /*cmd is the command after parsing*/
-        parseCommand(cmdLine," ",cmd);
-        printf("end parse!\n");
-       if ( isBuiltInCommand(cmd)){
-           printf("is builtin!\n");
-           executeBuiltInCommand(cmd);
-       } else {
-           printf("not builtin\n");
+      if (strlen(cmdLine) == 0){
+          continue;
+      }
+      if (strchr(cmdLine, '|')){
+          /*piped*/
+          executePiped(cmdLine);
 
-           childPid = fork();
-           if (childPid == 0){
-               printf("execute\n");
-               /*char** new_command = redirectionCommand(cmd);
-               printf("new command = %s\n" , new_command[0]);*/
-               execvp(cmd[0],cmd); /*calls execvp*/
-               exit(0);
-           } else {
-               if (isBackgroundJob(cmd)){
+          /*simple not piped*/
+      }else{
+          /*not piped*/
+          /*printf("not piped!\n");*/
+          /*cmd is the command after parsing*/
+          parseCommand(cmdLine," ",cmd);
+          /*printf("end parse!\n");*/
+          if ( isBuiltInCommand(cmd)){
+              /*printf("is builtin!\n");*/
+              executeBuiltInCommand(cmd);
 
-          /*record in list of background jobs*/
-               }else {
-                  wait(NULL);
-          /*waitpid (childPid);*/
-               }
-           }
-       }
-    }
+          } else {
+              /*printf("not builtin\n");*/
+              childPid = fork();
+              if (childPid == 0){
+                  /*printf("execute\n");*/
+                  redirectionCommand(cmd);
+                  /*printf("here     cmd[0] = %s\n",cmd[0]);*/
+                  execvp(cmd[0],cmd); /*calls execvp*/
+              } else {
+                  if (isBackgroundJob(cmdLine)){
+                      executeBackground(cmdLine);
+                      /*record in list of background jobs*/
+                  }else {
+                      wait(NULL);
+                      /*waitpid (childPid);*/
+                  }
+              }
+          }
+      }
+
   }
+   fclose(fptr);
+   exit(0);
 }

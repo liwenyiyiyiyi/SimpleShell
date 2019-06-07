@@ -1,17 +1,15 @@
 CC=gcc
 CFLAGS=-Wall -Wpedantic -Wextra -lreadline -std=gnu89
 
-TARGET=shell
 
-all: $(TARGET)
+shell: shell.o
+	gcc $(CFLAGS) -o shell shell.o
 
-$(TARGET): shell.c parse.o
-	gcc ${CFLAGS} $^ -o $@
+shell.o: shell.c parse.o
+	gcc  $(CFLAGS) -c -o $@ $<
 
 parse.o: parse.c parse.h
-	${CC} ${CFLAGS} -c $< -o $@
-
+	gcc  $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o ${TARGET}
-
+	rm -f shell *.o

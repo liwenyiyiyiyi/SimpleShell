@@ -1,21 +1,6 @@
 #include "parse.h"
 #define MAX 1024
-int readCommandLine(char *cmdLine){
-  char *cmdBuf;
-  cmdBuf = readline(" ");
-  printf("after read\n");
-  printf("buf = %s\n" , cmdBuf);
-  if (strlen(cmdBuf) != 0)
-  {
-    printf("not empty!\n");
-    strcpy(cmdLine,cmdBuf);
-    /*printf("cmdLine = %s        cmdBuf = %s\n",cmdLine,cmdBuf);*/
-    printf("end cp\n");
-    return 0;
-  }else{
-    return 1;
-  }
-}
+
 
 void parseCommand(char* cmdLine,char *symbol,char* result[]){
   int i = 0;
@@ -25,22 +10,25 @@ void parseCommand(char* cmdLine,char *symbol,char* result[]){
     if(cmdLine == NULL){
       break;
     }
+
     if (strlen(cmdLine) == 0){
         break;
     }
-    printf("cmdLine = %s\n",cmdLine);
+    /*printf("cmdLine = %s\n",cmdLine);*/
     /*strcpy(result[i],strsep(&cmdLine, symbol));*/
     result[i] = strsep(&cmdLine, symbol);
-    printf("else\n");
-    printf("in parse  i = %d  result of strsep = %s\n", i , result[i]);
+    if (strlen(result[i]) == 0){
+      i--;
+    }
+
     /*reach end*/
   }
   result[i] = NULL;
-  printf("out loop command[0]  = %s\n",result[0]);
+  /*printf("out loop command[0]  = %s\n",result[0]);*/
 }
 
 int isBuiltInCommand(char* cmd[]) {
-  printf("enter judge built_in\n");
+  /*printf("enter judge built_in\n");*/
 
   if (strcmp(cmd[0], "cd") == 0) {
     return 1;
@@ -61,7 +49,6 @@ char **redirectionCommand(char *cmd[])
   int flag_Out = 0;
   int flag_Outplus = 0;
   int counter = 0;
-  int length;
   int file_In;
   int file_Out;
   int file_Outplus;
@@ -69,41 +56,37 @@ char **redirectionCommand(char *cmd[])
   char Out[MAX];
   char Outplus[MAX];
   char *token = cmd[0];
-  printf("enter redirection\n");
+  /*printf("enter redirection\n");*/
 
   while (token != NULL)
   {
-    printf("token = %s\n",token);
-    printf("counter = %d\n",counter);
+    /*printf("token = %s\n",token);*/
+    /*printf("counter = %d\n",counter);*/
     /* "< " detected*/
-    if (strncmp(token, "<", 1) == 0)
+    if (strncmp(token, ">>", 2) == 0)
+    {
+      cmd[counter] = NULL;
+      flag_Outplus = 1;
+      strcpy(Outplus, cmd[counter + 1]);
+    }else if (strncmp(token, ">", 1) == 0)
+    {
+      cmd[counter] = NULL;
+      flag_Out = 1;
+      strcpy(Out, cmd[counter + 1]);
+    }else if (strncmp(token, "<", 1) == 0)
     {
       cmd[counter] = NULL;
       flag_In = 1;
       strcpy(In, cmd[counter + 1]);
     }
 
-
-    if (strncmp(token, ">", 1) == 0)
-    {
-      cmd[counter] = NULL;
-      flag_Out = 1;
-      strcpy(Out, cmd[counter + 1]);
-    }
-    if (strncmp(token, ">>", 2) == 0)
-    {
-      cmd[counter] = NULL;
-      flag_Outplus = 1;
-      strcpy(Outplus, cmd[counter + 1]);
-    }
-
     token = cmd[++counter];
   }
-  printf("flag_In = %d,flag_Out = %d,flag_Outplus = %d\n ",flag_In,flag_Out,flag_Outplus );
+  /*printf("flag_In = %d,flag_Out = %d,flag_Outplus = %d\n ",flag_In,flag_Out,flag_Outplus );*/
 
   if (!flag_In && !flag_Out && !flag_Outplus)
   {
-    printf("no redirection!\n");
+    /*printf("no redirection!\n");*/
     return cmd;
   }
 
@@ -115,8 +98,7 @@ char **redirectionCommand(char *cmd[])
   }
   if (flag_Out)
   {
-
-    file_Out = open(Out, O_TRUNC | O_CREAT, 0644);
+    file_Out = open(Out,O_WRONLY | O_TRUNC | O_CREAT, 0644);
     dup2(file_Out,1);
     close(file_Out);
   }
@@ -127,6 +109,6 @@ char **redirectionCommand(char *cmd[])
     dup2(file_Outplus,1);
     close(file_Outplus);
   }
-  printf("cmd[0] = %s\n",cmd[0]);
+  /*printf("cmd[0] = %s\n",cmd[0]);*/
   return cmd;
 }
