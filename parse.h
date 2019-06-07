@@ -10,5 +10,6 @@
 
 
 int readCommandLine(char *cmdLine);
-char** parseCommand(char* cmdLine,char *symbol);
+void parseCommand(char* cmdLine,char *symbol,char* result[]);
 int isBuiltInCommand(char** cmd);
+char **redirectionCommand(char *cmd[]);
