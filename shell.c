@@ -29,7 +29,7 @@ typedef struct job{
     /*status Done Terminated Running*/
     char* status;
     char cmd[MAX];
-};
+}job;
 
 
 int jobnum = 0;
@@ -52,7 +52,7 @@ void printPrompt(){
 }
 
 
-void executeBuiltInCommand(char** cmd){
+void executeBuiltInCommand(char* cmd[]){
   char cwd[MAX];
 
   /*case cd*/
@@ -80,6 +80,7 @@ void executeBuiltInCommand(char** cmd){
 
     /*print all jobs*/
     if (cmd[1] == NULL){
+        printf("print all\n");
       int i = 1;
       /*TODO jobnum undefined*/
       for(;i < jobnum;i++){
@@ -97,7 +98,7 @@ void executeBuiltInCommand(char** cmd){
       /*TODO jobnum undefined*/
       for(;i < jobnum;i++){
         if(all_job[i-1].job_id == jid){
-          prinf("[%d]",all_job[i-1].job_id);
+          printf("[%d]",all_job[i-1].job_id);
 
           /*TODO undefied all_job*/
           printf("%c  ",all_job[i-1].location);
@@ -117,11 +118,12 @@ void executeBuiltInCommand(char** cmd){
           int length = strlen(cmd[1]);
           char* buf;
           int j = 1;
+          int jid;
           for (;j < length;j++){
               buf[i-1] = cmd[1][i];
           }
           buf[length] = '\0';
-          int jid = atoi(buf);
+          jid = atoi(buf);
           for (; i < jobnum; i++) {
               if (all_job[i - 1].job_id == jid) {
                   all_job[i - 1].status = "Terminated";
@@ -145,35 +147,42 @@ void executeBuiltInCommand(char** cmd){
   }
 }
 
-void executePiped(char *cmdLine)
+void executePiped(char *command)
 {
     int counter = 0;
     int i = 0;
     int file[MAXPIPE][2];
     char *cmds[MAXARG];
     char *cmd[MAXARG];
-    char tokenize = cmdLine[0];
+    char tokenize = command[i];
     int j = 0;
+    printf("enter piped!\n");
     while (tokenize)
     {
-        if (!strncmp(cmdLine,"|",1))
+        if (tokenize == '|')
         {
             counter++;
         }
+        tokenize = command[++i];
+
     }
-    cmds = parseCommand(cmdLine,"|");
+
+    /*use cmds to record simple commands*/
+    parseCommand(command,"|",cmds);
+
+    printf ("cmds[0] = %s ,   cmds[1] = %s\n",cmds[0],cmds[1]);
 
     for (; j<counter+1;j++)
     {
-        int
-        cmd = parseCommand(cmds[j]," ");
-        if(!(i==counter))
+        /*use cmd to record single command*/
+        parseCommand(cmds[j]," ",cmd);
+        if(j!=counter)
         {
             pipe(file[j]);
         }
         if(!fork())
         {
-            if(!(j==counter))
+            if(j!=counter)
             {
                 dup2(file[j][1],1);
 				close(file[j][0]);
@@ -184,8 +193,9 @@ void executePiped(char *cmdLine)
 				close(file[j-1][1]);
 				close(file[j-1][0]);
 			}
-            redirectionCommand(cmd);
-            execvp(cmd[0],cmd);
+
+            /*TODO syntax error*/
+            /*execvp(cmd[0],cmd);*/
         }
         if(j)
         {
@@ -196,60 +206,75 @@ void executePiped(char *cmdLine)
     }
 }
 
-void executeCommand(char** cmd){
-  char** new_command = redirectionCommand(cmd);
-  execvp(new_command[0],new_command);
+void executeCommand(char* cmd[]){
+    printf("execute\n");
+    char** new_command = redirectionCommand(cmd);
+    printf("new command = %s\n" , new_command[0]);
+    execvp(new_command[0],new_command);
+
 }
 
 
-int isBackgroundJob(char* cmd){
-      return 1;
+int isBackgroundJob(char** cmd){
+    /*if(strchr(cmd,'&')){
+        return 1;
+    }*/
+    return 0;
 
 }
 
 
 
 int main(){
+
   int flag = 0;
-  char cmdLine[MAX];
-  char *cmd[MAXARG];
-  while(1){
-
     int childPid;
-
+  char** out;
+  while(1){
+      char cmdLine[MAX];
+      char *cmd[MAXARG];
     printPrompt();
 
+    /*use flag to record whether the input is empty flag = 1 -> empty*/
+    /*printf("before read\n");*/
     flag = readCommandLine(cmdLine); /*or GNU readline("");*/
+    printf("out flag = %d, cmdLine = %s\n", flag,cmdLine);
     if (flag){continue;}
-    if (strchr(cmdLine, '|'))
-        {
-            executePiped(cmdLine);
-        }
-    else
-    {
-    cmd = parseCommand(cmdLine," ");
-    if ( isBuiltInCommand(cmd)){
-      executeBuiltInCommand(cmd);
-    } else {
-      childPid = fork();
-      if (childPid == 0){
-        executeCommand(cmd); /*calls execvp*/
+    /*detect whether  piped*/
+    if (strchr(cmdLine, '|')){
+        /*piped*/
+        executePiped(cmdLine);
 
-      } else {
-        if (isBackgroundJob(cmd)){
+    /*simple not piped*/
+    }else{
+        /*not piped*/
+       printf("not piped!\n");
+       /*cmd is the command after parsing*/
+        parseCommand(cmdLine," ",cmd);
+        printf("end parse!\n");
+       if ( isBuiltInCommand(cmd)){
+           printf("is builtin!\n");
+           executeBuiltInCommand(cmd);
+       } else {
+           printf("not builtin\n");
+
+           childPid = fork();
+           if (childPid == 0){
+               printf("execute\n");
+               /*char** new_command = redirectionCommand(cmd);
+               printf("new command = %s\n" , new_command[0]);*/
+               execvp(cmd[0],cmd); /*calls execvp*/
+               exit(0);
+           } else {
+               if (isBackgroundJob(cmd)){
+
           /*record in list of background jobs*/
-
-
-
-
-
-        } else {
+               }else {
+                  wait(NULL);
           /*waitpid (childPid);*/
-        }
-      }
+               }
+           }
+       }
     }
-  }
-
-
   }
 }
