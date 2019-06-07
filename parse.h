@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include <fcntl.h>
 #include<unistd.h>
-#include<sys/types.h>
+
 #include<sys/wait.h>
 
 void parseCommand(char* cmdLine,char *symbol,char* result[]);
