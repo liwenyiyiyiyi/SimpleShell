@@ -13,3 +13,4 @@ int readCommandLine(char *cmdLine);
 void parseCommand(char* cmdLine,char *symbol,char* result[]);
 int isBuiltInCommand(char** cmd);
 char **redirectionCommand(char *cmd[]);
+
