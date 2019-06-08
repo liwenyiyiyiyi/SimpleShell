@@ -258,7 +258,7 @@ void recordBackgroundJob(char **cmd, char *cmdLine)
     int i = 0;
     for (; i < MAXARG; i++)
     {
-        if (strcmp(all_job[i].status,"Running") && strcmp(all_job[i].status,"Terminated"))
+        if (strcmp(all_job[i].status, "Running") && strcmp(all_job[i].status, "Terminated"))
         {
             break;
         }
@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
             /*not piped*/
             /*printf("not piped!\n");*/
             /*cmd is the command after parsing*/
-            strcpy(buf,cmdLine);
+            strcpy(buf, cmdLine);
             parseCommand(buf, " ", cmd);
             /*printf("end parse!\n");*/
             if (isBuiltInCommand(cmd))
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
                 /*printf("not builtin\n");*/
                 f = isBackgroundJob(cmd);
                 childPid = fork();
-                if (childPid == 0 && !f)
+                if (childPid == 0)
                 {
                     /*printf("execute\n");*/
                     redirectionCommand(cmd);
@@ -338,15 +338,23 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    if (f && childPid == 0)
+                    if (f)
                     {
-                        recordBackgroundJob(cmd,cmdLine);
-                        execvp(cmd[0],cmd);
+                        int c = 0;
+                        while (cmdLine[c])
+                        {
+                            if (cmdLine[c] == '&')
+                            {
+                                cmdLine[c] = '\0';
+                            }
+                            c++;
+                        }
+                        recordBackgroundJob(cmd, cmdLine);
                         /*record in list of background jobs*/
                     }
                     else
                     {
-                        waitpid(childPid,NULL,0);
+                        waitpid(childPid, NULL, 0);
                         /*waitpid (childPid);*/
                     }
                 }
