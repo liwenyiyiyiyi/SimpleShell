@@ -3,9 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <libgen.h>
 #include "parse.h"
 
@@ -88,11 +87,31 @@ void executeBuiltInCommand(char *cmd[])
             /*TODO jobnum undefined*/
             for (; i < jobnum; i++)
             {
-                printf("[%d]", all_job[i - 1].job_id);
-                /*TODO undefied all_job*/
-                printf("%c  ", all_job[i - 1].location);
-                printf("%s", all_job[i - 1].status);
-                printf("              '%s'", all_job[i - 1].cmd);
+                if (trcmp(all_job[i-1].status,"Running") == 0){
+                    printf("[%d]", all_job[i - 1].job_id);
+                    /*TODO undefied all_job*/
+                    printf("%c  ", all_job[i - 1].location);
+                    printf("%s", all_job[i - 1].status);
+                    printf("              %s &", all_job[i - 1].cmd);
+                }else if (strcmp(all_job[i-1].status,"Done") == 0){
+                    printf("[%d]", all_job[i - 1].job_id);
+                    /*TODO undefied all_job*/
+                    printf("%c  ", all_job[i - 1].location);
+                    printf("%s", all_job[i - 1].status);
+                    printf("              %s", all_job[i - 1].cmd);
+
+                    /*delete*/
+                    all_job[i-1].status = "Empty";
+                }else if (strcmp(all_job[i-1].status,"Terminated") == 0){
+                    printf("[%d]", all_job[i - 1].job_id);
+                    /*TODO undefied all_job*/
+                    printf("%c  ", all_job[i - 1].location);
+                    printf("%Running");
+                    printf("              %s", all_job[i - 1].cmd);
+                    all_job[i-1].status = "Empty";
+                }else{
+                    continue;
+                }
             }
             /*call by job_id*/
         }
@@ -109,13 +128,25 @@ void executeBuiltInCommand(char *cmd[])
 
                     /*TODO undefied all_job*/
                     printf("%c  ", all_job[i - 1].location);
-                    printf("%s", all_job[i - 1].status);
+                    if (strcmp(all_job[i-1].status,"Running") == 0){
+                        printf("Running");
+                    }else if(strcmp(all_job[i-1].status,"Terminated") == 0){
+                        printf("Running");
+                        all_job[i-1].status = "Empty";
+                    }else if(strcmp(all_job[i-1].status,"Done") == 0){
+                        printf("Done");
+                        all_job[i-1].status = "Empty";
+                    }
                     printf("              '%s'", all_job[i - 1].cmd);
-                    break;
+                }else{
+                    if (strcmp(all_job[i-1].status,"Terminated")==0 | strcmp(all_job[i-1].status,"Done") == 0 ){
+                        all_job[i-1].status = "Empty";
+                    }
+
                 }
             }
         }
-
+        /*update_location(jobnum);*/
         /*case kill*/
     }
     else if (strcmp(cmd[0], "kill") == 0)
@@ -125,7 +156,7 @@ void executeBuiltInCommand(char *cmd[])
         {
             int i = 1;
             int length = strlen(cmd[1]);
-            char *buf = NULL;
+            char *buf;
             int j = 1;
             int jid;
             for (; j < length; j++)
@@ -258,7 +289,7 @@ void recordBackgroundJob(char **cmd, char *cmdLine)
     int i = 0;
     for (; i < MAXARG; i++)
     {
-        if (strcmp(all_job[i].status, "Running") && strcmp(all_job[i].status, "Terminated"))
+        if (all_job[i].status != "Running" && all_job[i].status != "Terminated")
         {
             break;
         }
@@ -278,6 +309,7 @@ void recordBackgroundJob(char **cmd, char *cmdLine)
     all_job[i].status = "Running";
     strcpy(all_job[i].cmd, cmdLine);
     jobs_initialize(i + 1);
+    /*printf("[%d] %d\n", all_job[i].job_id, all_job[i].pid);*/
 }
 
 int main(int argc, char *argv[])
@@ -287,13 +319,48 @@ int main(int argc, char *argv[])
     FILE *fptr = fopen(argv[1], "r");
     jobs_initialize(0);
     /*l = fscanf(fptr, "%s", cmdLine);*/
-    /*printf("hello\n");*/
+    printf("hello\n");
     while (fgets(cmdLine, MAX, fptr) != NULL)
     {
         char *cmd[MAXARG];
         char buf[MAX];
         int f = 0;
+        int pid;
+        int JobId;
+        int status;
         /*printf("read : cmdLine = %s\n", cmdLine);*/
+
+        /*TODO check and print Done Job*/
+        /*0 -> running       1 -> Done     4 -> Terminated*/
+
+        /*check whether there is job done*/
+        pid  = waitpid(-1,&status,WNOHANG|WUNTRACED|WCONTINUED);
+
+        for (;pid > 0;pid  = waitpid(-1,&status,WNOHANG|WUNTRACED|WCONTINUED)){
+
+            if(WIFEXITED(status)){
+
+                /*search job with pid equal to pid and set the status to Done*/
+                /*1. search suppose jobid is JobID*/
+                /*2. set status*/
+
+            }
+        }
+
+
+        /*jobID*/
+        /*print the job with pid*/
+
+
+        /*remove jobs*/
+        /*set all_job[jobId]*/
+
+
+
+
+
+
+
 
         if (cmdLine[strlen(cmdLine) - 1] == '\n')
         {
@@ -316,7 +383,7 @@ int main(int argc, char *argv[])
             /*not piped*/
             /*printf("not piped!\n");*/
             /*cmd is the command after parsing*/
-            strcpy(buf, cmdLine);
+            strcpy(buf,cmdLine);
             parseCommand(buf, " ", cmd);
             /*printf("end parse!\n");*/
             if (isBuiltInCommand(cmd))
@@ -329,7 +396,7 @@ int main(int argc, char *argv[])
                 /*printf("not builtin\n");*/
                 f = isBackgroundJob(cmd);
                 childPid = fork();
-                if (childPid == 0)
+                if (childPid == 0 && !f)
                 {
                     /*printf("execute\n");*/
                     redirectionCommand(cmd);
@@ -338,28 +405,23 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    if (f)
+                    if (f && childPid == 0)
                     {
-                        int c = 0;
-                        while (cmdLine[c])
-                        {
-                            if (cmdLine[c] == '&')
-                            {
-                                cmdLine[c] = '\0';
-                            }
-                            c++;
-                        }
-                        recordBackgroundJob(cmd, cmdLine);
+                        recordBackgroundJob(cmd,cmdLine);
                         /*record in list of background jobs*/
                     }
                     else
                     {
-                        waitpid(childPid, NULL, 0);
+                        waitpid(childPid,NULL,0);
                         /*waitpid (childPid);*/
                     }
                 }
             }
         }
+
+       /*print Done job*/
+
+        /*if there is Done Job -> Print*/
     }
     fclose(fptr);
     exit(0);
