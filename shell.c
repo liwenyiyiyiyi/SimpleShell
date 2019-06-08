@@ -125,7 +125,7 @@ void executeBuiltInCommand(char *cmd[])
         {
             int i = 1;
             int length = strlen(cmd[1]);
-            char *buf;
+            char *buf = NULL;
             int j = 1;
             int jid;
             for (; j < length; j++)
@@ -258,7 +258,7 @@ void recordBackgroundJob(char **cmd, char *cmdLine)
     int i = 0;
     for (; i < MAXARG; i++)
     {
-        if (all_job[i].status != "Running" && all_job[i].status != "Terminated")
+        if (strcmp(all_job[i].status,"Running") && strcmp(all_job[i].status,"Terminated"))
         {
             break;
         }
@@ -278,7 +278,6 @@ void recordBackgroundJob(char **cmd, char *cmdLine)
     all_job[i].status = "Running";
     strcpy(all_job[i].cmd, cmdLine);
     jobs_initialize(i + 1);
-    printf("[%d] %d\n", all_job[i].job_id, all_job[i].pid);
 }
 
 int main(int argc, char *argv[])
@@ -342,6 +341,7 @@ int main(int argc, char *argv[])
                     if (f && childPid == 0)
                     {
                         recordBackgroundJob(cmd,cmdLine);
+                        execvp(cmd[0],cmd);
                         /*record in list of background jobs*/
                     }
                     else
