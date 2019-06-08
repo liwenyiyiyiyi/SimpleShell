@@ -126,7 +126,7 @@ void executeBuiltInCommand(char *cmd[])
                     /*TODO undefied all_job*/
                     printf("%c  ", all_job[i - 1].location);
                     printf("%s", all_job[i - 1].status);
-                    printf("              %s &\n", all_job[i - 1].cmd);
+                    printf("                 %s &\n", all_job[i - 1].cmd);
                 }
                 else if (strcmp(all_job[i - 1].status, "Done") == 0)
                 {
@@ -134,7 +134,7 @@ void executeBuiltInCommand(char *cmd[])
                     /*TODO undefied all_job*/
                     printf("%c  ", all_job[i - 1].location);
                     printf("%s", all_job[i - 1].status);
-                    printf("              %s\n", all_job[i - 1].cmd);
+                    printf("                 %s\n", all_job[i - 1].cmd);
 
                     /*delete*/
                     all_job[i - 1].status = "Empty";
@@ -145,7 +145,7 @@ void executeBuiltInCommand(char *cmd[])
                     /*TODO undefied all_job*/
                     printf("%c  ", all_job[i - 1].location);
                     printf("Running");
-                    printf("              %s\n", all_job[i - 1].cmd);
+                    printf("                 %s &\n", all_job[i - 1].cmd);
                     all_job[i - 1].status = "Empty";
                 }
                 else
@@ -171,18 +171,20 @@ void executeBuiltInCommand(char *cmd[])
                     if (strcmp(all_job[i - 1].status, "Running") == 0)
                     {
                         printf("Running");
+                        printf("                 %s &\n", all_job[i - 1].cmd);
                     }
                     else if (strcmp(all_job[i - 1].status, "Terminated") == 0)
                     {
                         printf("Running");
                         all_job[i - 1].status = "Empty";
+                        printf("                 %s &\n", all_job[i - 1].cmd);
                     }
                     else if (strcmp(all_job[i - 1].status, "Done") == 0)
                     {
                         printf("Done");
                         all_job[i - 1].status = "Empty";
+                        printf("                 %s\n", all_job[i - 1].cmd);
                     }
-                    printf("              %s\n", all_job[i - 1].cmd);
                 }
                 else
                 {
@@ -203,16 +205,15 @@ void executeBuiltInCommand(char *cmd[])
         {
             int i = 1;
             int length = strlen(cmd[1]);
-            char *buf;
+            char buf[MAX];
             int j = 1;
             int jid;
             for (; j < length; j++)
             {
-                buf[i - 1] = cmd[1][i];
+                buf[j - 1] = cmd[1][j];
             }
-            buf[length] = '\0';
+            buf[length-1] = '\0';
             jid = atoi(buf);
-            printf("jid = %d\n",jid);
             for (; i < jobnum; i++)
             {
                 if (all_job[i - 1].job_id == jid)
@@ -376,6 +377,8 @@ int main(int argc, char *argv[])
             {
 
                 /*search job with pid equal to pid and set the status to Done*/
+                JobId = find_job(pid);
+                all_job[JobId - 1].status = "Done";
                 /*1. search suppose jobid is JobID*/
                 /*2. set status*/
             }
