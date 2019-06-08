@@ -47,7 +47,7 @@ void printPrompt()
 void update_location()
 {
     int current = 0;
-    int counter = 0;
+    int counter = -1;
     int previous = -1;
     for (; current < jobnum; current++)
     {
@@ -62,15 +62,17 @@ void update_location()
     {
         all_job[previous].location = '-';
     }
+    if (counter != -1){
     all_job[counter].location = '+';
+    }
     jobnum = counter + 1;
 }
 
 int find_job(pid_t job_pid)
 {
     int i = 0;
-    for (; i < MAXARG; i++)
-    {
+    for (; i < jobnum; i++)
+    {   
         if (all_job[i].pid == job_pid)
         {
             return all_job[i].job_id;
@@ -134,7 +136,7 @@ void executeBuiltInCommand(char *cmd[])
                     /*TODO undefied all_job*/
                     printf("%c  ", all_job[i - 1].location);
                     printf("%s", all_job[i - 1].status);
-                    printf("                 %s\n", all_job[i - 1].cmd);
+                    printf("                    %s\n", all_job[i - 1].cmd);
 
                     /*delete*/
                     all_job[i - 1].status = "Empty";
@@ -183,7 +185,7 @@ void executeBuiltInCommand(char *cmd[])
                     {
                         printf("Done");
                         all_job[i - 1].status = "Empty";
-                        printf("                 %s\n", all_job[i - 1].cmd);
+                        printf("                    %s\n", all_job[i - 1].cmd);
                     }
                 }
                 else
@@ -335,10 +337,10 @@ void jobs_initialize(int i)
     all_job[i].job_id = 0;
 }
 
-void recordBackgroundJob(char **cmd, char *cmdLine)
+void recordBackgroundJob(char **cmd, char *cmdLine,pid_t childPid)
 {
     all_job[jobnum].job_id = jobnum + 1;
-    all_job[jobnum].pid = getpid();
+    all_job[jobnum].pid = childPid;
     all_job[jobnum].status = "Running";
     strcpy(all_job[jobnum].cmd, cmdLine);
     jobs_initialize(jobnum + 1);
@@ -360,7 +362,7 @@ int main(int argc, char *argv[])
         char buf[MAX];
         int f = 0;
         int pid;
-        int JobId;
+        int JobId = 0;
         int status;
         /*printf("read : cmdLine = %s\n", cmdLine);*/
 
@@ -368,9 +370,8 @@ int main(int argc, char *argv[])
         /*0 -> running       1 -> Done     4 -> Terminated*/
 
         /*check whether there is job done*/
-        pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED);
 
-        for (; pid > 0; pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED))
+        while( (pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED)) > 0)
         {
 
             if (WIFEXITED(status))
@@ -378,7 +379,10 @@ int main(int argc, char *argv[])
 
                 /*search job with pid equal to pid and set the status to Done*/
                 JobId = find_job(pid);
+                if (JobId != 0)
+                {
                 all_job[JobId - 1].status = "Done";
+                }
                 /*1. search suppose jobid is JobID*/
                 /*2. set status*/
             }
@@ -438,7 +442,7 @@ int main(int argc, char *argv[])
                             }
                             c++;
                         }
-                        recordBackgroundJob(cmd, cmdLine);
+                        recordBackgroundJob(cmd, cmdLine, childPid);
                         /*record in list of background jobs*/
                     }
                     else
